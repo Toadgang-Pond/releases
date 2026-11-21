@@ -1,0 +1,28 @@
+name: Foundation documentation checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check release documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s README.md
+          test -s RELEASE_POLICY.md
+          test -s docs/PUBLICATION_CHECKLIST.md
+          test -s docs/RELEASE_RECORD_TEMPLATE.md
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("releases.json").read_text())
+          assert d["schema_version"] == 1
+          assert isinstance(d["releases"], list)
+          assert len(d["releases"]) == 0, "Initial setup must not publish releases"
+          PY
